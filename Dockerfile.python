@@ -1,0 +1,4 @@
+FROM python
+COPY ./site /usr/share/nginx/html
+WORKDIR /usr/share/nginx/html/myblog
+RUN pip install --no-cache-dir -r requirements.txt -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
