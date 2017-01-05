@@ -20,7 +20,7 @@ services:
             - frontend
             - backend
         environment:
-            MYSQL_PASSWORD: Passw0rd
+            MYSQL_PASSWORD: 123456
         depends_on:
             - mysql
     mysql:
@@ -29,7 +29,7 @@ services:
             - mysql-data:/var/lib/mysql
         environment:
             TZ: 'Asia/Shanghai'
-            MYSQL_ROOT_PASSWORD: Passw0rd
+            MYSQL_ROOT_PASSWORD: 123456
         command: ['mysqld', '--character-set-server=utf8']
         networks:
             - backend
