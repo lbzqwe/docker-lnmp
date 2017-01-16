@@ -13,7 +13,7 @@ class MainView(View):
         context = {
             'contents': Contents.objects.all()
         }
-        return TemplateResponse(request, 'Webapp/apps/content/index.html', context)
+        return TemplateResponse(request, 'apps/content/index.html', context)
 
     def post(self, request):
         title, content = request.POST.get('title'), request.POST.get('content')
