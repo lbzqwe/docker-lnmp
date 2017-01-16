@@ -8,7 +8,8 @@ COPY requirements.txt /code
 RUN pip install --no-cache-dir -r /code/requirements.txt
 
 COPY ./site /code
-CMD ["/code/uwsgi/init.sh"]
+COPY ./uwsgi /code
+CMD ["/code/init.sh"]
 
 
 ENV MYSQL_USER admin
