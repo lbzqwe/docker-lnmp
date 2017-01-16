@@ -5,7 +5,7 @@ from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.views.generic import View
 
-from WebApp.apps.content.models import Contents
+from apps.content.models import Contents
 
 
 class MainView(View):
