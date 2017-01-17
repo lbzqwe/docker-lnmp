@@ -86,7 +86,7 @@ DATABASES = {
         #'PORT': os.environ['MYSQL_PORT']
         'NAME': 'test',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': '123456',
         'HOST': 'localhost',
         'PORT': 3306
     }
