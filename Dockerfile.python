@@ -11,7 +11,7 @@ COPY ./site /code
 COPY ./uwsgi /code
 CMD ["/code/init.sh"]
 
-TZ=Asia/Shanghai
+
 MYSQL_USER=admin
 MYSQL_DATABASE=test
 MYSQL_ROOT_PASSWORD=admin
