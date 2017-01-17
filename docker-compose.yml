@@ -16,20 +16,17 @@ services:
         build:
             context: .
             dockerfile: Dockerfile.python
+        env_file: .env    
         networks:
             - frontend
             - backend
-        environment:
-            MYSQL_PASSWORD: password
         depends_on:
             - mysql
     mysql:
         image: mysql:5.7
         volumes:
             - mysql-data:/var/lib/mysql
-        environment:
-            TZ: 'Asia/Shanghai'
-            MYSQL_ROOT_PASSWORD: password
+        env_file: .env    
         command: ['mysqld', '--character-set-server=utf8']
         networks:
             - backend
