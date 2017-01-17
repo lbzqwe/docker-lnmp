@@ -16,11 +16,11 @@ services:
         build:
             context: .
             dockerfile: Dockerfile.python
-        environment:
-            MYSQL_PASSWORD: p123456
         networks:
             - frontend
             - backend
+        environment:
+            MYSQL_PASSWORD: Passw0rd            
         depends_on:
             - mysql
     mysql:
@@ -28,8 +28,8 @@ services:
         volumes:
             - mysql-data:/var/lib/mysql
         environment:
-            TZ:'Asia/Shanghai'
-            MYSQL_ROOT_PASSWORD: p123456
+            TZ: 'Asia/Shanghai'
+            MYSQL_ROOT_PASSWORD: Passw0rd
         command: ['mysqld', '--character-set-server=utf8']
         networks:
             - backend
