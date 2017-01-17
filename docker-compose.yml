@@ -10,9 +10,9 @@ services:
         networks:
             - frontend
         depends_on:
-            - python
-    python:
-        image: "${DOCKER_USER}/lnmp-python:v1.2"
+            - web
+    web:
+        image: "${DOCKER_USER}/lnmp-web:v1.2"
         build:
             context: .
             dockerfile: Dockerfile.python
