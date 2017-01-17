@@ -12,7 +12,7 @@ COPY ./uwsgi /code
 CMD ["/code/init.sh"]
 
 
-ENV MYSQL_USER admin
+ENV MYSQL_USER root
 ENV MYSQL_DATABASE test
 ENV MYSQL_ROOT_PASSWORD Passw0rd
 ENV MYSQL_PASSWORD Passw0rd
