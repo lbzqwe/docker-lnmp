@@ -22,7 +22,7 @@ services:
         environment:
             MYSQL_PASSWORD: Passw0rd            
         depends_on:
-            - mysql
+            - redis
         links:
             - mysql
             - redis     
@@ -42,6 +42,8 @@ services:
         build:
             context: .
             dockerfile: Dockerfile.redis
+        depends_on:
+            - mysql            
         networks:
             - backend            
 volumes:
