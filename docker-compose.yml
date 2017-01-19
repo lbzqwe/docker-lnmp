@@ -24,7 +24,6 @@ services:
         depends_on:
             - redis
         links:
-            - mysql
             - redis     
     mysql:
         image: mysql:5.7
