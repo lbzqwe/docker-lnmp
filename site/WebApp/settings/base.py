@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import socket
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -20,9 +21,26 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'n7v_of^enc2j9p+7$!yv*c7*h+*wsfm!5^v$je)e+n+h74x5+9'
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+print("hostName"+socket.gethostname())
+if socket.gethostname() == 'lab1':
+    DEBUG = TEMPLATE_DEBUG =True
+    DATABASE_NAME = 'devdb'
+else:
+    DEBUG = TEMPLATE_DEBUG =False
+    DATABASE_NAME = 'prdb'
+
+
+
+ADMINS = (
+('lbzqwe','120498304@qq.com'),
+)
+MANAGERS = (
+('lbzqwe', 'lbzqwe@example.com'),
+)
+
+
+
 
 ALLOWED_HOSTS = ['*']
 
@@ -38,6 +56,7 @@ INSTALLED_APPS = (
     'apps.content'
 )
 
+
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -47,7 +66,9 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.common.BrokenLinkEmailsMiddleware',
 )
+
 
 ROOT_URLCONF = 'WebApp.urls'
 
