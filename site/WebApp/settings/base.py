@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'n7v_of^enc2j9p+7$!yv*c7*h+*wsfm!5^v$je)e+n+h74x5+9'
 # SECURITY WARNING: don't run with debug turned on in production!
 print("hostName"+socket.gethostname())
-if socket.gethostname() == 'lab1':
+if socket.gethostname() == 'cd8fb74973ec':
     DEBUG = TEMPLATE_DEBUG =True
     DATABASE_NAME = 'devdb'
 else:
