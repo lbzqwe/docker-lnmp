@@ -16,9 +16,10 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from django.http import *
+import  app.views
 
 urlpatterns = [
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', app.views.home),
 ]
 handler404 = 'mysite.views.my_custom_page_not_found_view'
 HttpResponseNotFound,
