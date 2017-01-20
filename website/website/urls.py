@@ -21,11 +21,11 @@ import  app.views
 urlpatterns = [
     url(r'^admin/', app.views.home),
 ]
-handler404 = 'mysite.views.my_custom_page_not_found_view'
-HttpResponseNotFound,
-handler500 = 'mysite.views.my_custom_error_view'
-HttpResponseServerError,
-handler403 = 'mysite.views.my_custom_permission_denied_view'
-HttpResponseForbidden,
-handler400 = 'mysite.views.my_custom_bad_request_view'
-HttpResponseBadRequest
+# handler404 = 'mysite.views.my_custom_page_not_found_view'
+# HttpResponseNotFound,
+# handler500 = 'mysite.views.my_custom_error_view'
+# HttpResponseServerError,
+# handler403 = 'mysite.views.my_custom_permission_denied_view'
+# HttpResponseForbidden,
+# handler400 = 'mysite.views.my_custom_bad_request_view'
+# HttpResponseBadRequest
