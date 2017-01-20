@@ -22,7 +22,7 @@ services:
         environment:
             MYSQL_PASSWORD: Passw0rd            
         depends_on:
-            - redis
+            - mysql
         links:
             - mysql
             - redis     
@@ -37,15 +37,49 @@ services:
         command: ['mysqld', '--character-set-server=utf8']
         networks:
             - backend
+        depends_on:
+            - redis             
     redis: 
         image: "${DOCKER_USER}/redis:v1.2"
         build:
             context: .
             dockerfile: Dockerfile.redis
         depends_on:
-            - mysql            
+            - redis21          
         networks:
-            - backend            
+            - backend   
+    redis1: 
+        image: "${DOCKER_USER}/redis1:v1.2"
+        build:
+            context: .
+            dockerfile: Dockerfile.redis
+        ports:
+            - "6380"          
+        networks:
+            - backend   
+        depends_on:
+            - redis2             
+    redis2: 
+        image: "${DOCKER_USER}/redis2:v1.2"
+        build:
+            context: .
+            dockerfile: Dockerfile.redis
+        ports:
+            - "6381"          
+        networks:
+            - backend
+        depends_on:
+            - redis3           
+    redis3: 
+        image: "${DOCKER_USER}/redis3:v1.2"
+        build:
+            context: .
+            dockerfile: Dockerfile.redis
+        ports:
+            - "6382"          
+        networks:
+            - backend 
+                       
 volumes:
     mysql-data:
 
