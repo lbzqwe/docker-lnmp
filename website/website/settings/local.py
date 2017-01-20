@@ -1,4 +1,4 @@
-from WebApp.settings.base import *
+from website.settings.base import *
 
 DATABASES = {
     'default': {
