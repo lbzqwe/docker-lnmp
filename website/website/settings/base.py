@@ -53,7 +53,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'apps.content'
+    'app'
 )
 
 
@@ -70,13 +70,14 @@ MIDDLEWARE_CLASSES = (
 )
 
 
-ROOT_URLCONF = 'WebApp.urls'
+ROOT_URLCONF = 'website.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.abspath(os.path.dirname(__name__))
+            # os.path.join(BASE_DIR, '../../templates')
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -90,7 +91,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'WebApp.wsgi.application'
+WSGI_APPLICATION = 'website.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases

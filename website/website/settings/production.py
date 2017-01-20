@@ -1,4 +1,4 @@
-from WebApp.settings.base import *
+from website.settings.base import *
 
 print('os.environ : ', os.environ)
 
