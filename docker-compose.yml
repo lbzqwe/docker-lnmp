@@ -45,7 +45,7 @@ services:
             context: .
             dockerfile: Dockerfile.redis
         depends_on:
-            - redis21          
+            - redis1          
         networks:
             - backend   
     redis1: 
