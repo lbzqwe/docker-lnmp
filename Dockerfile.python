@@ -1,21 +1,15 @@
 
 FROM python:3.5
 
-RUN mkdir -p /code
+ENV TZ=Asia/Shanghai
+COPY sources.list /etc/apt/sources.list
+RUN echo "构建代码路径" && mkdir -p /code
 WORKDIR /code
-
 COPY requirements.txt /code
-RUN pip install --no-cache-dir -r /code/requirements.txt
+RUN echo "安装需要的python库" && pip install --no-cache-dir -r /code/requirements.txt
 
 COPY ./website /code
 COPY ./uwsgi /code
 CMD ["/code/init.sh"]
 
-
-ENV MYSQL_USER root
-ENV MYSQL_DATABASE test
-ENV MYSQL_ROOT_PASSWORD Passw0rd
-ENV MYSQL_PASSWORD Passw0rd
-ENV MYSQL_CONTAINER_NAME mysql
-ENV MYSQL_PORT 3306
 

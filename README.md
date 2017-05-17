@@ -1,51 +1,57 @@
-# LNMP - Docker 多容器间协作互连
+# LNMP(linux nginx mysql python) - Docker 多容器间协作互连
 
 # 说明
 
-这是一个 Docker 多容器间协作互连的例子。使用的是最常见的 LNMP 的技术栈，既 `Nginx` + `PHP` + `MySQL`。
+这是一个 Docker 多容器间协作互连的例子。使用的是最特殊的 LNMP 的技术栈，既 `Nginx` + `PHP` + `MySQL`+`Python`。
 
 在这个例子中，我使用的是 Docker Compose，这样比较简洁，如果使用 `docker` 命令也可以做到同样的效果，当然，过程要相对繁琐一些。
 
 ## 服务
 
-在 `docker-compose.yml` 文件中，定义了3个**服务**，分别是 `nginx`, `php` 和 `mysql`。
+在 `docker-compose.yml` 文件中，定义了3种**服务**，分别是 `nginx`, `web`,`redis` 和 `mysql`,其中包括3个`resis`服务。
 
 ```yml
 services:
     nginx:
-        image: "${DOCKER_USER}/lnmp-nginx:v1.2"
+        image: "${DOCKER_USER}/nginx:v1.2"
         build:
             context: .
             dockerfile: Dockerfile.nginx
         ...
-    php:
-        image: "${DOCKER_USER}/lnmp-php:v1.2"
+    web:
+        image: "${DOCKER_USER}/web:v1.2"
         build:
             context: .
-            dockerfile: Dockerfile.php
+            dockerfile: Dockerfile.python
         ...
     mysql:
         image: mysql:5.7
         ...
+    redis1:
+        image: "${DOCKER_USER}/redis1:v1.2"
+    redis2:
+        image: "${DOCKER_USER}/redis2:v1.2"   
+    redis3:
+        image: "${DOCKER_USER}/redis3:v1.2" 
 ```
 
-其中 `mysql` 服务中的 `image: mysql:5.7` 是表明使用的是 `mysql:5.7` 这个镜像。而 `nginx` 和 `php` 服务中的 `image` 含义更为复杂。一方面是说，要使用其中名字的镜像，另一方面，如果这个镜像不存在，则利用其下方指定的 `build` 指令进行构建。在单机环境，这里的 `image` 并非必须，只保留 `build` 就可以。但是在 Swarm 环境中，需要集群中全体主机使用同一个镜像，每个机器自己构建就不合适了，指定了 `image` 后，就可以在单机 `build` 并 `push` 到 registry，然后在集群中执行 `up` 的时候，才可以自动从 registry 下载所需镜像。
+其中 `mysql` 服务中的 `image: mysql:5.7` 是表明使用的是 `mysql:5.7` 这个镜像。而 `nginx` 和 `web` 服务中的 `image` 含义更为复杂。一方面是说，要使用其中名字的镜像，另一方面，如果这个镜像不存在，则利用其下方指定的 `build` 指令进行构建。在单机环境，这里的 `image` 并非必须，只保留 `build` 就可以。但是在 Swarm 环境中，需要集群中全体主机使用同一个镜像，每个机器自己构建就不合适了，指定了 `image` 后，就可以在单机 `build` 并 `push` 到 registry，然后在集群中执行 `up` 的时候，才可以自动从 registry 下载所需镜像。
 
 这里的镜像名看起来也有些不同：
 
 ```bash
-image: "${DOCKER_USER}/lnmp-nginx:v1.2"
+image: "${DOCKER_USER}/nginx:v1.2"
 ```
 
 其中的 `${DOCKER_USER}` 这种用法是环境变量替换，当存在环境变量 `DOCKER_USER` 时，将会用其值替换 `${DOCKER_USER}`。而环境变量从哪里来呢？除了在 Shell 中 `export` 对应的环境变量外，Docker Compose 还支持一个默认的环境变量文件，既 `.env` 文件。你可以在项目中看到，`docker-compose.yml` 的同级目录下，存在一个 `.env` 文件，里面定义了环境变量。
 
 ```bash
-DOCKER_USER=twang2218
+DOCKER_USER=lbzqwe
 ```
 
 每次执行 `docker-compose` 命令的时候，这个 `.env` 文件就会自动被加载，所以是一个用来定制 compose 文件非常方便的地方。这里我只定义了一个环境变量 `DOCKER_USER`，当然，可以继续一行一个定义更多的环境变量。
 
-初次之外，还可以明确指定环境变量文件。具体的配置请查看 [`docker-compose` 官方文档](https://docs.docker.com/compose/compose-file/#envfile)。
+次之外，还可以明确指定环境变量文件。具体的配置请查看 [`docker-compose` 官方文档](https://docs.docker.com/compose/compose-file/#envfile)。
 
 ## 镜像
 
@@ -58,8 +64,13 @@ DOCKER_USER=twang2218
         image: mysql:5.7
         ...
         environment:
-            TZ: 'Asia/Shanghai'
-            MYSQL_ROOT_PASSWORD: Passw0rd
+            TZ: ${TZ}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+            MYSQL_CONTAINER_NAME: ${MYSQL_CONTAINER_NAME}
+            MYSQL_PORT: ${MYSQL_PORT}
         command: ['mysqld', '--character-set-server=utf8']
         ...
 ```
@@ -76,73 +87,39 @@ DOCKER_USER=twang2218
 FROM nginx:1.11
 ENV TZ=Asia/Shanghai
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
-COPY ./site /usr/share/nginx/html
+COPY ./website /usr/share/nginx/html
 ```
 
 镜像定制很简单，就是指定时区后，将配置文件、网站页面目录复制到指定位置。
 
-### php 服务镜像
+###  web服务镜像
 
-`php` 服务较为特殊，由于官方 `php` 镜像未提供连接 `mysql` 所需的插件，所以 `php` 服务无法直接使用官方镜像。在这里，正好用其作为例子，演示如何基于官方镜像，安装插件，定制自己所需的镜像。
+`web` 服务较为特殊，由于官方 `python` 镜像未提供连接 `nginx` 所需的插件，所以 `web` 服务无法直接使用官方镜像。在这里，正好用其作为例子，演示如何基于官方镜像，安装插件，定制自己所需的镜像。
 
-对应的[`Dockerfile.php`](https://coding.net/u/twang2218/p/docker-lnmp/git/blob/master/Dockerfile.php)：
+对应的[`Dockerfile.python`]
 
 ```Dockerfile
-FROM php:7-fpm
+FROM python:3.5
 
-ENV TZ=Asia/Shanghai
+RUN mkdir -p /code
+WORKDIR /code
 
-COPY sources.list /etc/apt/sources.list
+COPY requirements.txt /code
+RUN pip install --no-cache-dir -r /code/requirements.txt
 
-RUN set -xe \
-    && echo "构建依赖" \
-    && buildDeps=" \
-        build-essential \
-        php5-dev \
-        libfreetype6-dev \
-        libjpeg62-turbo-dev \
-        libmcrypt-dev \
-        libpng12-dev \
-    " \
-    && echo "运行依赖" \
-    && runtimeDeps=" \
-        libfreetype6 \
-        libjpeg62-turbo \
-        libmcrypt4 \
-        libpng12-0 \
-    " \
-    && echo "安装 php 以及编译构建组件所需包" \
-    && apt-get update \
-    && apt-get install -y ${runtimeDeps} ${buildDeps} --no-install-recommends \
-    && echo "编译安装 php 组件" \
-    && docker-php-ext-install iconv mcrypt mysqli pdo pdo_mysql zip \
-    && docker-php-ext-configure gd \
-        --with-freetype-dir=/usr/include/ \
-        --with-jpeg-dir=/usr/include/ \
-    && docker-php-ext-install gd \
-    && echo "清理" \
-    && apt-get purge -y --auto-remove \
-        -o APT::AutoRemove::RecommendsImportant=false \
-        -o APT::AutoRemove::SuggestsImportant=false \
-        $buildDeps \
-    && rm -rf /var/cache/apt/* \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY ./php.conf /usr/local/etc/php/conf.d/php.conf
-COPY ./site /usr/share/nginx/html
+COPY ./website /code
+COPY ./uwsgi /code
+CMD ["/code/init.sh"]
 ```
 
-前面几行很简单，指定了基础镜像为 [`php:7-fpm`](https://hub.docker.com/_/php/)，并且设定时区为中国时区，然后用[网易的 Debian 源](http://mirrors.163.com/.help/debian.html)替代默认的源，避免伟大的墙影响普通的包下载。接下来的那一个很多行的 `RUN` 需要特别的说一下。
+前面几行很简单，指定了基础镜像为 [`python:3.5`](https://hub.docker.com/_/python/)，并且设定时区为中国时区，然后用[网易的 Debian 源](http://mirrors.163.com/.help/debian.html)替代默认的源，避免伟大的墙影响普通的包下载。接下来的`RUN`、`WORKDIR`、`CMD` 需要特别的说一下。
 
-初学 Docker，不少人会误以为 `Dockerfile` 等同于 Shell 脚本，于是错误的用了很多个 `RUN`，每个 `RUN` 对应一个命令。这是错误用法，会导致最终镜像极为臃肿。`Dockerfile` 是镜像定制文件，其中每一个命令都是在定义这一层该如何改变，因此应该[遵循最佳实践](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/)，将同一类的东西写入一层，并且在结束时清理任何无关的文件。
+初学 Docker，不少人会误以为 `Dockerfile` 等同于 Shell 脚本，于是错误的用了很多个`RUN`，每个 `RUN` 对应一个命令。这是错误用法，会导致最终镜像极为臃肿。`Dockerfile` 是镜像定制文件，其中每一个命令都是在定义这一层该如何改变，因此应该[遵循最佳实践](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/)，将同一类的东西写入一层，并且在结束时清理任何无关的文件。
 
-这一层的目的是安装、构建 PHP 插件，因此真正所需要的是构建好的插件、以及插件运行所需要的依赖库，其它任何多余的文件都不应该存在。所以，在这里可以看到，依赖部分划分为了“构建依赖”以及“运行依赖”，这样在安装后，可以把不再需要的“构建依赖”删除掉，避免因为构建而导致这层多了一些不需要的文件。
+第一层的目的是创建代码存放目录，之后使用`WORKDIR`指定为工作目录（Dockerfile中的WORKDIR指令用于指定容器的一个目录， 容器启动时执行的命令（CMD）会在该目录下执行）。
+这二层的目的是安装、构建 python 插件。
 
-这里使用的是官方 `php` 镜像中所带的 `docker-php-ext-install` 来安装 php 的插件，并且在需要时，使用 `docker-php-ext-configure` 来配置构建参数。这两个脚本是官方镜像中为了帮助镜像定制所提供的，很多官方镜像都有这类为镜像定制特意制作的脚本或者程序。这也是官方镜像易于扩展复用的原因之一，他们在尽可能的帮助使用、定制镜像。
-
-更多关于如何定制镜像的信息可以从 Docker Hub 官方镜像的文档中看到：<https://hub.docker.com/_/mysql/>
-
-最后的清理过程中，可以看到除了清除“构建依赖”、以及相关无用软件外，还彻底清空了 `apt` 的缓存。任何不需要的东西，都应该清理掉，确保这一层构建完毕后，仅剩所需的文件。
+更多关于如何定制镜像的信息可以从 Docker Hub 官方镜像的文档中看到：<https://hub.docker.com/_/mysql/>。
 
 在 `Dockerfile` 的最后，复制配置文件和网页目录到指定位置。
 
@@ -184,23 +161,43 @@ services:
 
 *   `nginx` 接到了名为 `frontend` 的前端网络；
 *   `mysql` 接到了名为 `backend` 的后端网络；
-*   而作为中间的 `php` 同时连接了 `frontend` 和 `backend` 网络上。
+*   而作为中间的 `web` 同时连接了 `frontend` 和 `backend` 网络上。
 
 连接到同一个网络的容器，可以进行互连；而不同网络的容器则会被隔离。
-所以在这个例子中，`nginx` 可以和 `php` 服务进行互连，`php` 也可以和 `mysql` 服务互连，因为它们连接到了同一个网络中；
+所以在这个例子中，`nginx` 可以和 `web` 服务进行互连，`web` 也可以和 `mysql` 服务互连，因为它们连接到了同一个网络中；
 而 `nginx` 和 `mysql` 并不处于同一网络，所以二者无法通讯，这起到了隔离的作用。
 
-处于同一网络的容器，可以使用**服务名**访问对方。比如，在这个例子中的 `./site/index.php` 里，就是使用的 `mysql` 这个服务名去连接的数据库服务器。
+处于同一网络的容器，可以使用**服务名**访问对方。比如，在这个例子中的 `'HOST': os.environ['MYSQL_CONTAINER_NAME']` 里，就是使用的 `mysql` 这个服务名去连接的数据库服务器。连接`redis`,用的是`redis`这个服务名。
 
-```php
-<?php
-// 建立连接
-$conn = mysqli_connect("mysql", "root", $_ENV["MYSQL_PASSWORD"]);
-...
-?>
+```python production.py
+DATABASES = {
+    'default': {
+        ...
+        'HOST': os.environ['MYSQL_CONTAINER_NAME'],
+        ...
+        'PASSWORD': os.environ['MYSQL_PASSWORD'],
+        ...
+    }
+}
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': [
+            'redis://redis:6379/1',
+            'redis://redis1:6380/1',
+            'redis://redis2:6381/1',
+            'redis://redis3:6382/1',
+            
+        ],
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    },
+}
 ```
 
-可以注意到，在这段数据库连接的代码里，数据库密码是通过环境变量，`$_ENV["MYSQL_PASSWORD"]`，读取的，因此密码并非写死于代码中。在运行时，可以通过环境变量将实际环境的密码传入容器。在这个例子里，就是在 `docker-compose.yml` 文件中指定的环境变量：
+可以注意到，在这段数据库连接的代码里，数据库密码是通过环境变量，`'PASSWORD': os.environ['MYSQL_PASSWORD']`，读取的，因此密码并非写死于代码中。在运行时，可以通过环境变量将实际环境的密码传入容器。在这个例子里，就是在 `docker-compose.yml` 文件中指定的环境变量：
 
 ```yml
 version: '2'
@@ -221,7 +218,7 @@ services:
 
 ## 存储
 
-在这三个服务中，`nginx` 和 `php` 都是无状态服务，它们都不需要本地存储。但是，`mysql` 是数据库，需要存储动态数据文件。我们知道 Docker 是要求容器存储层里不放状态，所有的状态（也就是动态的数据）的持久化都应该使用卷，在这里就是使用命名卷保存数据的。
+在这三个服务中，`nginx` 和 `web` 都是无状态服务，它们都不需要本地存储。但是，`mysql` 是数据库，需要存储动态数据文件。我们知道 Docker 是要求容器存储层里不放状态，所有的状态（也就是动态的数据）的持久化都应该使用卷，在这里就是使用命名卷保存数据的。
 
 ```yaml
 volumes:
@@ -250,8 +247,8 @@ services:
     nginx:
         ...
         depends_on:
-            - php
-    php:
+            - web
+    web:
         ...
         depends_on:
             - mysql
@@ -259,11 +256,11 @@ services:
         ...
 ```
 
-在这里，`nginx` 需要使用 `php` 服务，所以这里依赖关系上设置了 `php`，而 `php` 服务则需要操作 `mysql`，所以它依赖了 `mysql`。
+在这里，`nginx` 需要使用 `web` 服务，所以这里依赖关系上设置了 `web`，而 `web` 服务则需要操作 `mysql`，所以它依赖了 `mysql`。
 
-在 `docker-compose up -d` 的时候，会根据依赖控制服务间的启动顺序，对于这个例子，则会以 `mysql` → `php` → `nginx` 的顺序启动服务。
+在 `docker-compose up -d` 的时候，会根据依赖控制服务间的启动顺序，对于这个例子，则会以 `mysql` → `web` → `nginx` 的顺序启动服务。
 
-需要注意的是，这里的启动顺序的控制是有限度的，并非彻底等到所依赖的服务可以工作后，才会启动下一个服务。而是确定容器启动后，则开始启动下一个服务。因此，这里的顺序控制可能依旧会导致某项服务启动时，它所依赖的服务并未准备好。比如 `php` 启动后，有可能会出现 `mysql` 服务的数据库尚未初始化完。对于某些应用来说，这个控制，依旧可能导致报错说无法连接所需服务。
+需要注意的是，这里的启动顺序的控制是有限度的，并非彻底等到所依赖的服务可以工作后，才会启动下一个服务。而是确定容器启动后，则开始启动下一个服务。因此，这里的顺序控制可能依旧会导致某项服务启动时，它所依赖的服务并未准备好。比如 `web` 启动后，有可能会出现 `mysql` 服务的数据库尚未初始化完。对于某些应用来说，这个控制，依旧可能导致报错说无法连接所需服务。
 
 如果需要应用级别的服务依赖等待，需要在 `entrypoint.sh` 这类脚本中，加入服务等待的部分。而且，也可以通过 `restart: always` 这种设置，让应用启动过程中，如果依赖服务为准备好，而报错退出后，有再一次尝试的机会。
 
