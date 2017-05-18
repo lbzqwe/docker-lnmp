@@ -12,7 +12,6 @@ DATABASES = {
         'PORT': os.environ['MYSQL_PORT']
     }
 }
-
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
