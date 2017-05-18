@@ -54,6 +54,8 @@ services:
         build:
             context: .
             dockerfile: Dockerfile.redis
+        ports:
+            - "6379" 
         depends_on:
             - redis1          
         networks:
