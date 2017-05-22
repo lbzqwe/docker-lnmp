@@ -19,7 +19,7 @@ from django.http import *
 import  app.views
 
 urlpatterns = [
-    url(r'^admin/', app.views.home),
+    url(r'^admin/', app.views.test),
 ]
 # handler404 = 'mysite.views.my_custom_page_not_found_view'
 # HttpResponseNotFound,

@@ -47,3 +47,8 @@ def about(request):
             'year':datetime.now().year,
         }
     )
+    
+def test(request):
+    """Renders the about page."""
+    assert isinstance(request, HttpRequest)
+    return "hello"
